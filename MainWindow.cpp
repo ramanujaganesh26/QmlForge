@@ -82,7 +82,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     m_autoRunTimer = new QTimer(this);
     m_autoRunTimer->setSingleShot(true);
-    m_autoRunTimer->setInterval(600);
+    m_autoRunTimer->setInterval(300);
     connect(m_autoRunTimer, &QTimer::timeout, this, &MainWindow::runQml);
 
     setupUi();
@@ -214,7 +214,7 @@ void MainWindow::createMenus()
 
     m_autoRunAction = runMenu->addAction(tr("Auto-Run (Live Reload)"), this, &MainWindow::onAutoRunToggled);
     m_autoRunAction->setCheckable(true);
-    m_autoRunAction->setChecked(false);
+    m_autoRunAction->setChecked(true);
 
     runMenu->addAction(tr("Run qmllint Validator"), this, &MainWindow::runQmllint);
 
