@@ -1,0 +1,29 @@
+# Build directories
+build/
+build-*/
+cmake-build-*/
+dist/
+
+# Qt / Creator generated files
+*.user
+*.user.*
+*.autosave
+.qt/
+.qtcreator/
+CMakeLists.txt.user
+
+# C++ compiled files
+*.obj
+*.o
+*.a
+*.lib
+*.so
+*.dylib
+*.dll
+*.exe
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*~

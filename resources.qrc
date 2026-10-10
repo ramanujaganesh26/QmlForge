@@ -1,0 +1,10 @@
+<RCC>
+    <qresource prefix="/">
+        <file>examples/rectangle.qml</file>
+        <file>examples/animation.qml</file>
+        <file>examples/listview.qml</file>
+        <file>examples/grid.qml</file>
+        <file>examples/button.qml</file>
+        <file>examples/timer_state.qml</file>
+    </qresource>
+</RCC>
