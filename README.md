@@ -130,7 +130,6 @@ This project is licensed under the [MIT License](LICENSE).
 
 ---
 
-## Maintainer Information
+## Repository
 
-- **Developer**: work-with-ram (`ramanujaganeshlk.work@gmail.com`)
-- **Repository**: [https://github.com/ramanujaganesh26/QmlForge.git](https://github.com/ramanujaganesh26/QmlForge.git)
+- **GitHub Repository**: [https://github.com/ramanujaganesh26/QmlForge.git](https://github.com/ramanujaganesh26/QmlForge.git)
