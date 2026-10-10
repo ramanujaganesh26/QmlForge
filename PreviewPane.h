@@ -40,6 +40,7 @@ private:
     QUrl m_currentBaseUrl;
     QColor m_backgroundColor{"#181825"};
     QList<QQmlError> m_lastErrors;
+    QObject *m_currentRootObj{nullptr};
 };
 
 #endif // PREVIEWPANE_H

@@ -1,6 +1,8 @@
 #include "PreviewPane.h"
 #include <QQmlEngine>
 #include <QQmlComponent>
+#include <QQuickWindow>
+#include <QQuickItem>
 #include <QDir>
 #include <QFileInfo>
 
@@ -45,6 +47,12 @@ void PreviewPane::loadQmlCode(const QString &code, const QUrl &baseUrl)
 {
     if (!m_quickWidget || !m_quickWidget->engine()) return;
 
+    // Delete previous root object if dynamically created
+    if (m_currentRootObj) {
+        delete m_currentRootObj;
+        m_currentRootObj = nullptr;
+    }
+
     // Clear engine component cache so edits always show immediately
     m_quickWidget->engine()->clearComponentCache();
 
@@ -80,13 +88,44 @@ void PreviewPane::loadQmlCode(const QString &code, const QUrl &baseUrl)
         return;
     }
 
-    m_quickWidget->setContent(resolvedUrl, component, rootObj);
+    m_currentRootObj = rootObj;
+
+    // If root object is a top-level Window / ApplicationWindow, prevent popup OS window
+    QQuickWindow *win = qobject_cast<QQuickWindow*>(rootObj);
+    if (win) {
+        win->hide();
+        win->setVisible(false);
+
+        QVariant colorVar = win->property("color");
+        if (colorVar.isValid() && colorVar.canConvert<QColor>()) {
+            QColor c = colorVar.value<QColor>();
+            if (c.isValid()) {
+                m_quickWidget->setClearColor(c);
+            }
+        }
+
+        QQuickItem *contentItem = win->contentItem();
+        if (contentItem) {
+            m_quickWidget->setContent(resolvedUrl, component, contentItem);
+        } else {
+            m_quickWidget->setContent(resolvedUrl, component, rootObj);
+        }
+    } else {
+        m_quickWidget->setContent(resolvedUrl, component, rootObj);
+    }
+
     m_lastErrors.clear();
 }
 
 void PreviewPane::clearPreview()
 {
     if (!m_quickWidget || !m_quickWidget->engine()) return;
+
+    if (m_currentRootObj) {
+        delete m_currentRootObj;
+        m_currentRootObj = nullptr;
+    }
+
     m_quickWidget->engine()->clearComponentCache();
     m_quickWidget->setContent(QUrl(), nullptr, nullptr);
     m_lastErrors.clear();
