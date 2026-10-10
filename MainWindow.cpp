@@ -26,49 +26,9 @@ static const char *STARTER_QML = R"(import QtQuick
 import QtQuick.Controls
 
 Rectangle {
-    id: root
     width: 400
     height: 400
     color: "#1e1e2e"
-    radius: 12
-
-    Column {
-        anchors.centerIn: parent
-        spacing: 16
-
-        Text {
-            id: titleText
-            anchors.horizontalCenter: parent.horizontalCenter
-            text: "Hello, QmlForge!"
-            color: "#cdd6f4"
-            font.pixelSize: 24
-            font.bold: true
-        }
-
-        Rectangle {
-            width: 120
-            height: 40
-            color: "#89b4fa"
-            radius: 8
-            anchors.horizontalCenter: parent.horizontalCenter
-
-            Text {
-                anchors.centerIn: parent
-                text: "Click Me"
-                color: "#11111b"
-                font.bold: true
-            }
-
-            MouseArea {
-                anchors.fill: parent
-                onClicked: {
-                    titleText.text = "QML Live Preview Working!";
-                    root.color = (root.color == "#1e1e2e") ? "#181825" : "#1e1e2e";
-                    console.log("Canvas clicked! Color toggled.");
-                }
-            }
-        }
-    }
 }
 )";
 
