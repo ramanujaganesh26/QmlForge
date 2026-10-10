@@ -1,47 +1,163 @@
-# QmlForge - QML Live Editor & Playground
+# QmlForge
 
-QmlForge is a high-performance Qt 6 C++ desktop application designed for real-time QML code editing, testing, and live preview rendering.
-
----
-
-## Overview
-
-QmlForge provides an integrated live-coding playground for Qt Quick and QML developers. Developers can write QML components in a feature-rich editor while inspecting layout, state, and animation updates side-by-side in real time.
+Live QML Component Playground, Dynamic Component Runtime, and Real-Time Preview Engine in Qt 6 and C++17.
 
 ---
 
-## Features
+## Technical Abstract
 
-### Live Preview & Auto-Run
-- **Real-Time Live Editing**: Automated 300 ms debounced preview refresh as code is updated.
-- **Component Cache Invalidation**: Automatic clearing of the `QQmlEngine` component cache on each run ensuring edits take effect instantly.
-- **Embedded Window Rendering**: Top-level `ApplicationWindow` and `Window` root elements are automatically embedded directly into the live preview canvas without spawning external desktop windows.
+QmlForge is an advanced Qt 6 desktop IDE and live rendering engine designed for real-time QML component development and playground testing. The system provides an integrated code editing environment coupled with a live QML preview pipeline:
 
-### Code Editor Engine
-- **Line Numbers & Line Highlighting**: Dynamic line number gutter with active line highlighting.
-- **Smart Indentation**: Auto-indentation for braces, brackets, and parentheses (`{`, `[`, `(`) and tab-to-4-spaces conversion.
-- **Bracket Matching**: Visual bracket pair matching for `()`, `{}`, and `[]`.
-- **QML Syntax Highlighting**: Highlighting for QML types, language keywords, numbers, strings, property declarations, and single/multiline comments.
-- **Typography & Font Zooming**: Monospace font rendering with `Ctrl + Mouse Wheel` zooming and `Ctrl + 0` font reset.
+1. **In-Process QQuickWidget Live Preview Pipeline**: Non-blocking asynchronous QML parsing, component cache invalidation (`QQmlEngine::clearComponentCache()`), and dynamic item rendering using `QQuickWidget` set to `SizeRootObjectToView`.
+2. **Smart Window Embedding Architecture**: Intercepts top-level `QQuickWindow` and `ApplicationWindow` root objects, suppresses standalone OS window pop-ups (`win->hide()`), and reparents the window's root `contentItem` into the central preview pane.
+3. **Real-Time Debounced Execution Engine**: Single-shot `QTimer` debouncing (300 ms) triggered by document modifications for immediate live updates without input blocking or UI stuttering.
+4. **Diagnostic Error & Log Processing Pipeline**: Captures `QQmlComponent` / `QQuickWidget` error lists and intercepts global Qt log streams (`QtDebugMsg`, `QtWarningMsg`, `QtCriticalMsg`), providing interactive double-click line navigation to error locations.
 
-### Error & Output Console
-- **Interactive Line Navigation**: Double-click error messages to move the editor cursor directly to the corresponding line and column.
-- **Console Log Stream**: Intercepts `console.log()` and `console.warn()` statements with execution timestamps.
-- **Status Reporting**: Live execution status indicators showing build state and error counts.
+---
 
-### Theme & Canvas Control
-- **Dark & Light Themes**: Preset themes tailored for low-light and bright working environments.
-- **Canvas Color Selector**: Customizable preview background color for testing transparent or colored QML components.
-- **PNG Preview Export**: High-resolution image exporter for capturing current preview framebuffers.
+## System Architecture
 
-### Included QML Examples
-Built-in preset examples accessible via the toolbar:
-1. **Rectangle & Colors**: Mouse event handling, color randomization, and dynamic property bindings.
-2. **Animation**: Infinite rotation and scale easing animations.
-3. **ListView**: Custom list item delegates with data models and price tags.
-4. **Grid Layout**: Responsive 3x3 layout grid with repeater elements.
-5. **Button & Signals**: Interactive buttons and signal handling.
-6. **Timer & States**: State transitions controlled by active timer events.
+### Component Hierarchy
+
+```text
++---------------------------------------------------------------------------------+
+|                                APPLICATION MAIN                                 |
+|                                   (main.cpp)                                    |
++----------------------------------------+----------------------------------------+
+                                         |
+                                         v
+                            +--------------------------+
+                            |        MainWindow        |
+                            |  (QMainWindow / Splitter)|
+                            +------------+-------------+
+                                         |
+          +------------------------------+------------------------------+
+          |                              |                              |
+          v                              v                              v
++-------------------+          +-------------------+          +-------------------+
+|    CodeEditor     |          |    PreviewPane    |          |    ConsolePane    |
+| (QPlainTextEdit)  |          |  (QQuickWidget)   |          |  (QTableWidget)   |
++---------+---------+          +---------+---------+          +---------+---------+
+          |                              |                              |
+          v                              v                              v
++-------------------+          +-------------------+          +-------------------+
+|  QmlHighlighter   |          |  QQmlEngine /     |          | Qt Message Handler|
+| (QSyntaxHighl...) |          |  QQmlComponent    |          | (Log & Error Stream)|
++-------------------+          +-------------------+          +-------------------+
+```
+
+### Data & Execution Pipeline Flow
+
+```mermaid
+graph TD
+    subgraph UI_Layer["User Input & Code Editor Layer"]
+        A["User Edits QML Text"] --> B["CodeEditor::textChanged Signal"]
+        B --> C["QmlHighlighter Tokenizer"]
+        B --> D{"Auto-Run Active?"}
+    end
+
+    subgraph Execution_Layer["Debounced Execution Pipeline"]
+        D -- Yes --> E["Start QTimer (300ms Debounce)"]
+        D -- No --> F["Wait for Ctrl+R / F5 / Run Click"]
+        E --> G["Timer Timeout Signal"]
+        F --> G
+        G --> H["MainWindow::runQml()"]
+    end
+
+    subgraph Preview_Layer["Preview & Engine Pipeline"]
+        H --> I["QQmlEngine::clearComponentCache()"]
+        I --> J["QQmlComponent::setData(code, baseUrl)"]
+        J --> K{"Parse & Instantiate Error?"}
+        
+        K -- Yes --> L["Extract QQmlError List"]
+        K -- No --> M["Create Root QObject"]
+        
+        M --> N{"Is QQuickWindow / ApplicationWindow?"}
+        N -- Yes --> O["Hide Standalone OS Window & Extract contentItem"]
+        N -- No --> P["Pass QQuickItem directly"]
+        O --> Q["QQuickWidget::setContent(url, comp, item)"]
+        P --> Q
+    end
+
+    subgraph Diagnostic_Layer["Diagnostic & Log Pipeline"]
+        L --> R["ConsolePane::showQmlErrors(errors)"]
+        Q --> S["QQuickWidget::statusChanged Signal"]
+        S -- Ready --> T["Update Status Bar: Run OK"]
+        S -- Error --> R
+        R --> U["User Double-Clicks Error Row"]
+        U --> V["Jump Editor Cursor to Line:Column"]
+    end
+
+    style UI_Layer fill:#f9f9f9,stroke:#333,stroke-width:1px
+    style Execution_Layer fill:#f0f4f8,stroke:#005580,stroke-width:1px
+    style Preview_Layer fill:#f2f9f2,stroke:#006622,stroke-width:1px
+    style Diagnostic_Layer fill:#fff5f5,stroke:#990000,stroke-width:1px
+```
+
+---
+
+## Communication Workflows
+
+### 1. Live Code Execution & Preview Update Workflow
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor User
+    participant Editor as CodeEditor
+    participant Main as MainWindow
+    participant Engine as QQmlEngine
+    participant Preview as PreviewPane
+    participant Console as ConsolePane
+
+    User->>Editor: Edits QML code in editor
+    Editor->>Main: emit textChanged()
+    Main->>Main: Start 300ms debounce timer
+    Note over Main: User pauses typing...
+    Main->>Preview: loadQmlCode(code, baseUrl)
+    Preview->>Engine: clearComponentCache()
+    Preview->>Engine: QQmlComponent::setData(code, baseUrl)
+    alt QML Compilation Successful
+        Engine-->>Preview: Return Root QObject
+        Preview->>Preview: Embed contentItem & update clearColor
+        Preview-->>Main: Render ready
+        Main->>Console: showSuccessStatus()
+    else QML Compilation Failed
+        Engine-->>Preview: Return QQmlError List
+        Preview->>Console: showQmlErrors(errors)
+        Main->>Main: Update status bar with error count
+    end
+```
+
+### 2. Error Diagnostic & Code Line Navigation Workflow
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor User
+    participant Console as ConsolePane
+    participant Main as MainWindow
+    participant Editor as CodeEditor
+
+    Console->>Console: Display error item (Line:Column, Message)
+    User->>Console: Double-click error table row
+    Console->>Main: emit errorDoubleClicked(line, col)
+    Main->>Editor: jumpToEditorLineCol(line, col)
+    Editor->>Editor: Position text cursor at line:col & highlight block
+    Editor->>User: Set focus to editor line
+```
+
+---
+
+## Module Specifications
+
+| Module | Base Class | Primary Responsibility |
+| :--- | :--- | :--- |
+| `MainWindow` | `QMainWindow` | Manages central splitters, toolbars, menus, status bar, and `QSettings` state persistence. |
+| `CodeEditor` | `QPlainTextEdit` | Custom editor with monospace font, dynamic line number gutter, auto-indentation, and bracket matching. |
+| `PreviewPane` | `QWidget` | Hosts `QQuickWidget`, handles component cache invalidation, and embeds `ApplicationWindow` content items. |
+| `ConsolePane` | `QWidget` | Displays error tables and streaming Qt logs (`console.log`) with double-click line navigation. |
+| `QmlHighlighter` | `QSyntaxHighlighter` | Tokenizer providing syntax coloring for QML keywords, types, strings, numbers, and properties. |
 
 ---
 
