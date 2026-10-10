@@ -54,7 +54,7 @@ void ConsolePane::clear()
 void ConsolePane::showSuccessStatus()
 {
     m_tableWidget->setRowCount(0);
-    m_statusLabel->setText(tr("✔ Run OK"));
+    m_statusLabel->setText(tr("Run OK"));
     m_statusLabel->setStyleSheet("font-weight: bold; font-size: 13px; color: #40c057;");
 
     int row = m_tableWidget->rowCount();
@@ -84,7 +84,7 @@ void ConsolePane::showQmlErrors(const QList<QQmlError> &errors)
         return;
     }
 
-    m_statusLabel->setText(tr("✖ %1 Error(s)").arg(errors.size()));
+    m_statusLabel->setText(tr("%1 Error(s)").arg(errors.size()));
     m_statusLabel->setStyleSheet("font-weight: bold; font-size: 13px; color: #f38ba8;");
 
     QString timeStr = QTime::currentTime().toString("hh:mm:ss");

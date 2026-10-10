@@ -234,10 +234,10 @@ void MainWindow::createToolbar()
     tb->addAction(tr("Save"), this, &MainWindow::saveFile);
     tb->addSeparator();
 
-    QAction *runAct = tb->addAction(tr("▶ Run (Ctrl+R / F5)"), this, &MainWindow::runQml);
+    QAction *runAct = tb->addAction(tr("Run (Ctrl+R / F5)"), this, &MainWindow::runQml);
     runAct->setToolTip(tr("Execute current QML script in live preview"));
 
-    tb->addAction(tr("⏹ Stop/Clear"), this, &MainWindow::stopClearPreview);
+    tb->addAction(tr("Stop/Clear"), this, &MainWindow::stopClearPreview);
     tb->addSeparator();
 
     tb->addWidget(new QLabel(tr("  Examples: "), this));
@@ -255,10 +255,10 @@ void MainWindow::createToolbar()
     tb->addWidget(m_examplesComboBox);
 
     tb->addSeparator();
-    QAction *autoRunTb = tb->addAction(tr("⚡ Auto-Run"), m_autoRunAction, &QAction::setChecked);
+    QAction *autoRunTb = tb->addAction(tr("Auto-Run"), m_autoRunAction, &QAction::setChecked);
     autoRunTb->setCheckable(true);
 
-    QAction *themeTb = tb->addAction(tr("🌙 Dark Theme"), m_themeAction, &QAction::setChecked);
+    QAction *themeTb = tb->addAction(tr("Dark Theme"), m_themeAction, &QAction::setChecked);
     themeTb->setCheckable(true);
     themeTb->setChecked(m_isDarkMode);
 }
@@ -317,11 +317,11 @@ void MainWindow::runQml()
     QList<QQmlError> errors = m_previewPane->errors();
     if (errors.isEmpty() && m_previewPane->status() == QQuickWidget::Ready) {
         m_consolePane->showSuccessStatus();
-        m_statusResultLabel->setText(tr("✔ Run OK"));
+        m_statusResultLabel->setText(tr("Run OK"));
         m_statusResultLabel->setStyleSheet("color: #40c057; font-weight: bold;");
     } else if (!errors.isEmpty()) {
         m_consolePane->showQmlErrors(errors);
-        m_statusResultLabel->setText(tr("✖ %1 Error(s)").arg(errors.size()));
+        m_statusResultLabel->setText(tr("%1 Error(s)").arg(errors.size()));
         m_statusResultLabel->setStyleSheet("color: #f38ba8; font-weight: bold;");
     } else {
         m_statusResultLabel->setText(tr("Status: Loading..."));
